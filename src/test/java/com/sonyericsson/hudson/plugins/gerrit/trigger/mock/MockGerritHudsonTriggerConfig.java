@@ -467,4 +467,14 @@ public class MockGerritHudsonTriggerConfig implements
     public boolean isRestVerified() {
         return true;
     }
+
+    @Override
+    public void setGerritCredentialsId(String id) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String getGerritCredentialsId() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

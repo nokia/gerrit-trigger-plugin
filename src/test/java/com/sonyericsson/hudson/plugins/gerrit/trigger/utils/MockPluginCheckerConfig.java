@@ -340,4 +340,14 @@ public class MockPluginCheckerConfig implements IGerritHudsonTriggerConfig {
     public int getProjectListFetchDelay() {
         return 0;
     }
+
+    @Override
+    public void setGerritCredentialsId(String id) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String getGerritCredentialsId() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

@@ -1,5 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:c="/lib/credentials"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
     <l:layout title="${%Gerrit Trigger Plugin Configuration}" norefresh="true" permission="${it.requiredPermission}">
         <l:side-panel>
@@ -54,30 +54,20 @@
                                    value="${it.config.gerritProxy}"
                                    default="${com.sonyericsson.hudson.plugins.gerrit.gerritevents.GerritDefaultValues.DEFAULT_GERRIT_PROXY}"/>
                     </f:entry>
-                    <f:entry title="${%Username}"
-                             help="/plugin/gerrit-trigger/help-GerritUserName.html">
-                        <f:textbox name="gerritUserName"
-                                   value="${it.config.gerritUserName}"
-                                   default="${com.sonyericsson.hudson.plugins.gerrit.gerritevents.GerritDefaultValues.DEFAULT_GERRIT_USERNAME}"/>
-                    </f:entry>
+                    
                     <f:entry title="${%E-mail}"
                              help="/plugin/gerrit-trigger/help-GerritEMail.html">
                         <f:textbox name="gerritEMail"
                                    value="${it.config.gerritEMail}"/>
                     </f:entry>
-                    <f:entry title="${%SSH Keyfile}"
-                             help="/plugin/gerrit-trigger/help-GerritKeyFile.html">
-                        <f:textbox name="gerritAuthKeyFile"
-                                   value="${it.config.gerritAuthKeyFile}"
-                                   default="${com.sonyericsson.hudson.plugins.gerrit.gerritevents.GerritDefaultValues.DEFAULT_GERRIT_AUTH_KEY_FILE}"
-                                   checkUrl="'${rootURL}/${serverURL}/validKeyFileCheck?value='+escape(this.value)"/>
+
+
+                    <f:entry field="gerritCredentialsId" title="${%Credentials}">
+                      <c:select name="gerritCredentialsId" value="${it.config.gerritCredentialId}"/>
                     </f:entry>
-                    <f:entry title="${%SSH Keyfile Password}"
-                             help="/plugin/gerrit-trigger/help-GerritKeyFilePassword.html">
-                        <f:password name="gerritAuthKeyFilePassword"
-                                    value="${it.config.gerritAuthKeyFileSecretPassword}"
-                                    default="${com.sonyericsson.hudson.plugins.gerrit.gerritevents.GerritDefaultValues.DEFAULT_GERRIT_AUTH_KEY_FILE_PASSWORD}"/>
-                    </f:entry>
+
+
+                    <!--- snip this out for credentials plugin -->
                     <f:optionalBlock name="buildCurrentPatchesOnly"
                                                              title="${%Build Current Patches Only}"
                                                              help="/plugin/gerrit-trigger/help-GerritBuildCurrentPatchesOnly.html"
@@ -104,7 +94,7 @@
                     <f:validateButton title="${%Test Connection}"
                                       progress="${%Testing...}"
                                       method="testConnection"
-                                      with="gerritHostName,gerritSshPort,gerritProxy,gerritUserName,gerritAuthKeyFile,gerritAuthKeyFilePassword"/>
+                                      with="gerritHostName,gerritSshPort,gerritProxy,gerritUserName,gerritCredentialsId"/>
                 </f:section>
                 <f:section title="${%Gerrit Reporting Values}">
                     <tr>

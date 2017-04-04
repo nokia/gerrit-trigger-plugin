@@ -318,4 +318,17 @@ public interface IGerritHudsonTriggerConfig extends GerritConnectionConfig2 {
       * @return the instance of {@link Secret}.
       */
      Secret getGerritAuthKeyFileSecretPassword();
+
+     /**
+      *
+      * @param id of saved jenkins credential
+      */
+     void setGerritCredentialsId(String id);
+
+     /**
+      *
+      * @return jenkins credential id for getting full secret
+      */
+     String getGerritCredentialsId();
+
 }

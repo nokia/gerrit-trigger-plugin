@@ -23,6 +23,9 @@
  */
 package com.sonyericsson.hudson.plugins.gerrit.trigger.config;
 
+import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.google.common.primitives.Ints;
 import com.sonyericsson.hudson.plugins.gerrit.trigger.hudsontrigger.data.BuildCancellationPolicy;
 import com.sonymobile.tools.gerrit.gerritevents.GerritDefaultValues;
@@ -61,6 +64,9 @@ import static com.sonymobile.tools.gerrit.gerritevents.GerritDefaultValues.DEFAU
 import static com.sonymobile.tools.gerrit.gerritevents.GerritDefaultValues.DEFAULT_GERRIT_USERNAME;
 import static com.sonymobile.tools.gerrit.gerritevents.GerritDefaultValues.DEFAULT_NR_OF_RECEIVING_WORKER_THREADS;
 import static com.sonymobile.tools.gerrit.gerritevents.GerritDefaultValues.DEFAULT_NR_OF_SENDING_WORKER_THREADS;
+import hudson.model.Item;
+import hudson.security.ACL;
+import java.util.Collections;
 
 /**
  * Configuration bean for the global configuration.
@@ -151,6 +157,7 @@ public class Config implements IGerritHudsonTriggerConfig {
     private String gerritEMail;
     private File gerritAuthKeyFile;
     private Secret gerritAuthKeyFilePassword;
+    private String gerritCredentialId;
     private boolean useRestApi;
     private String gerritHttpUserName;
     private Secret gerritHttpPassword;
@@ -217,6 +224,7 @@ public class Config implements IGerritHudsonTriggerConfig {
         notificationLevel = config.getNotificationLevel();
         gerritAuthKeyFile = new File(config.getGerritAuthKeyFile().getPath());
         gerritAuthKeyFilePassword = Secret.fromString(config.getGerritAuthKeyFilePassword());
+        gerritCredentialId = config.getGerritCredentialsId();
         useRestApi = config.isUseRestApi();
         gerritHttpUserName = config.getGerritHttpUserName();
         gerritHttpPassword = Secret.fromString(config.getGerritHttpPassword());
@@ -269,7 +277,7 @@ public class Config implements IGerritHudsonTriggerConfig {
         gerritUserName = formData.optString("gerritUserName", DEFAULT_GERRIT_USERNAME);
         gerritEMail = formData.optString("gerritEMail", "");
         notificationLevel = Notify.valueOf(formData.optString("notificationLevel",
-                Config.DEFAULT_NOTIFICATION_LEVEL.toString()));
+        Config.DEFAULT_NOTIFICATION_LEVEL.toString()));
         String file = formData.optString("gerritAuthKeyFile", null);
         if (file != null) {
             gerritAuthKeyFile = new File(file);
@@ -279,6 +287,7 @@ public class Config implements IGerritHudsonTriggerConfig {
         gerritAuthKeyFilePassword = Secret.fromString(formData.optString(
                 "gerritAuthKeyFilePassword",
                 DEFAULT_GERRIT_AUTH_KEY_FILE_PASSWORD));
+        gerritCredentialId = formData.optString("gerritCredentialsId", null);
 
         if (formData.has("buildCurrentPatchesOnly")) {
             JSONObject currentPatchesOnly = formData.getJSONObject("buildCurrentPatchesOnly");
@@ -981,7 +990,25 @@ public class Config implements IGerritHudsonTriggerConfig {
 
     @Override
     public Authentication getGerritAuthentication() {
-        return new Authentication(gerritAuthKeyFile, gerritUserName, getGerritAuthKeyFilePassword());
+
+        if (this.gerritCredentialId == null) {
+            return new Authentication(gerritAuthKeyFile, gerritUserName, getGerritAuthKeyFilePassword());
+        }
+        List<BasicSSHUserPrivateKey> creds = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials(
+                BasicSSHUserPrivateKey.class,
+                (Item)null,
+                ACL.SYSTEM,
+                Collections.<DomainRequirement> emptyList());
+        BasicSSHUserPrivateKey user = CredentialsMatchers.firstOrNull(creds,
+                CredentialsMatchers.withId(gerritCredentialId));
+        if (user == null) {
+            return null;
+        }
+        String passphrase = null;
+        if (user.getPassphrase() != null) {
+            passphrase = user.getPassphrase().getPlainText();
+        }
+        return new Authentication(user.getPrivateKey(), user.getUsername(), passphrase);
     }
 
     @Override
@@ -1118,5 +1145,15 @@ public class Config implements IGerritHudsonTriggerConfig {
             this.buildCurrentPatchesOnly.setAbortNewPatchsets(false);
         }
         return this;
+    }
+
+    @Override
+    public void setGerritCredentialsId(String id) {
+        this.gerritCredentialId = id;
+    }
+
+    @Override
+    public String getGerritCredentialsId() {
+        return this.gerritCredentialId;
     }
 }
